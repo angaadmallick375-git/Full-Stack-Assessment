@@ -191,9 +191,13 @@ app.use((err, req, res, next) => {
 
 // Start server
 const start = async () => {
-  // Set default JWT_SECRET if not provided (development/fallback only)
+  // Set default JWT_SECRET if not provided
   if (!process.env.JWT_SECRET) {
-    if (isProductionEnv()) {
+    // In Railway, generate a temporary secret if not provided
+    if (isRailway) {
+      process.env.JWT_SECRET = 'railway-temp-secret-' + Date.now();
+      console.warn('⚠️ Using temporary JWT_SECRET - set JWT_SECRET in Variables for persistence');
+    } else if (isProductionEnv()) {
       console.error('❌ JWT_SECRET is not set. Add it in Railway → Variables.');
       process.exit(1);
     } else {
