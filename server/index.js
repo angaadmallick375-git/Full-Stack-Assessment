@@ -191,9 +191,15 @@ app.use((err, req, res, next) => {
 
 // Start server
 const start = async () => {
+  // Set default JWT_SECRET if not provided (development/fallback only)
   if (!process.env.JWT_SECRET) {
-    console.error('❌ JWT_SECRET is not set. Add it in Railway → Variables.');
-    process.exit(1);
+    if (isProductionEnv()) {
+      console.error('❌ JWT_SECRET is not set. Add it in Railway → Variables.');
+      process.exit(1);
+    } else {
+      process.env.JWT_SECRET = 'dev-secret-key-do-not-use-in-production';
+      console.warn('⚠️ Using development JWT_SECRET');
+    }
   }
 
   if (isRailway) {

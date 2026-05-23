@@ -96,9 +96,7 @@ async function createPool() {
   const databaseUrl = process.env.DATABASE_URL || process.env.DATABASE_PRIVATE_URL;
 
   if (isRailway && !databaseUrl) {
-    throw new Error(
-      'DATABASE_URL is required on Railway. Add a PostgreSQL database to your project and link it to this service.'
-    );
+    console.warn('⚠️ DATABASE_URL not set on Railway - will use mock database');
   }
 
   if (databaseUrl) {
