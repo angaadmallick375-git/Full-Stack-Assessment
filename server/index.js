@@ -214,16 +214,24 @@ const start = async () => {
     process.exit(1);
   });
 
-  try {
-    await autoMigrate();
-  } catch (err) {
-    console.error('❌ Migration error:', err.message);
-    console.log('⚠️ Server running but database initialization failed');
-    if (isProductionEnv()) {
-      console.log('💡 Tip: Link a PostgreSQL database in Railway to enable full functionality');
-      // Don't exit - allow server to run with mock/fallback database
+  // Run migrations in background, don't wait for them
+  (async () => {
+    try {
+      // Add a timeout to prevent migrations from hanging forever
+      const migrationPromise = autoMigrate();
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Migration timeout')), 10000)
+      );
+      
+      await Promise.race([migrationPromise, timeoutPromise]);
+    } catch (err) {
+      console.error('❌ Migration error:', err.message);
+      console.log('⚠️ Server running but database initialization failed');
+      if (isProductionEnv()) {
+        console.log('💡 Tip: Link a PostgreSQL database in Railway to enable full functionality');
+      }
     }
-  }
+  })();
 };
 
 start().catch((err) => {
