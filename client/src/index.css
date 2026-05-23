@@ -78,6 +78,7 @@
   --radius-md: 12px;
   --radius-lg: 18px;
   --radius-xl: 26px;
+}
 
 /* ============ ANIMATIONS ============ */
 @keyframes fadeIn {
