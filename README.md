@@ -83,38 +83,52 @@ Ensure you have a PostgreSQL database running locally or remotely (e.g., from Ne
 ## 🚂 Deploy to Railway
 
 ### 1. Push code to GitHub
-Ensure your repository is on GitHub (required for Railway).
+Push this repo to GitHub, then connect it in [Railway](https://railway.app).
 
-### 2. Create Railway project
-1. Go to [railway.app](https://railway.app) and create a new project from your repo.
-2. Set the **root directory** to `server` (or deploy from repo root and adjust paths).
-3. Add a **PostgreSQL** plugin — Railway injects `DATABASE_URL` automatically.
+### 2. Create the Railway project
+1. **New Project** → **Deploy from GitHub repo**
+2. Leave **Root Directory** empty (use the repo root, not `server/`)
+3. Click **+ New** → **Database** → **PostgreSQL**
+4. Open your **web service** → **Variables** → **Add Reference** → link `DATABASE_URL` from Postgres
 
-### 3. Environment variables (Railway → Variables)
+### 3. Required environment variables
 
 | Variable | Value |
 |----------|--------|
-| `DATABASE_URL` | Auto-filled by PostgreSQL plugin |
-| `JWT_SECRET` | Long random string (e.g. `openssl rand -hex 32`) |
+| `DATABASE_URL` | Reference from PostgreSQL service (required) |
+| `JWT_SECRET` | Long random string (required) |
 | `NODE_ENV` | `production` |
-| `CLIENT_URL` | Your public Railway URL (e.g. `https://your-app.up.railway.app`) |
-| `SERVE_CLIENT` | `true` (serves built React app from same service) |
+| `CLIENT_URL` | Your public URL, e.g. `https://your-app.up.railway.app` |
 
-### 4. Build & start
-- **Start command:** `npm start` (from `server/`)
-- **Health check:** `GET /api/health`
-- The included `server/railway.toml` builds the client with `VITE_API_URL=/api` so the SPA talks to the API on the same domain.
+Optional: `SERVE_CLIENT=false` only if the frontend is hosted elsewhere.
 
-### 5. Verify deployment
-- Visit `https://your-app.up.railway.app/api/health` — should return `{"status":"ok",...}`
-- Open the app URL, sign up, create a project, and test tasks.
+### 4. Build & start (auto from `railway.toml`)
+Railway uses the root `railway.toml`:
+- **Build:** installs deps + builds React to `client/dist` with `VITE_API_URL=/api`
+- **Start:** `npm start` → runs the API and serves the React app
 
-### Separate frontend service (optional)
-If you host the client separately:
-1. Set `SERVE_CLIENT=false` on the API service.
-2. Build the client with `VITE_API_URL=https://your-api.up.railway.app/api`.
-3. Deploy `client/dist` to Railway Static, Vercel, or Netlify.
-4. Add the frontend URL to `CLIENT_URL` on the API (comma-separated if multiple).
+Manual override (if needed):
+
+| Setting | Value |
+|---------|--------|
+| Build Command | `npm install --prefix server && npm install --prefix client && VITE_API_URL=/api npm run build --prefix client` |
+| Start Command | `npm start` |
+| Healthcheck Path | `/api/health` |
+
+### 5. Verify
+- Open `https://YOUR-APP.up.railway.app/api/health` → should show `"status":"ok"` and `"database":"configured"`
+- Open the main URL → sign up and create a project
+
+### Common Railway errors
+
+| Error | Fix |
+|-------|-----|
+| `JWT_SECRET is not set` | Add `JWT_SECRET` in Variables |
+| `DATABASE_URL is required on Railway` | Add PostgreSQL and link `DATABASE_URL` to the web service |
+| `client/dist not found` | Build failed — check build logs; ensure root directory is repo root |
+| Build only runs `server` | Set Root Directory to **/** (repo root), not `server` |
+| `Cannot find module 'express'` | Build must run `npm install --prefix server` (see `railway.toml`) |
+| PostgreSQL SSL / connection failed | Use linked `DATABASE_URL`; internal URLs skip SSL automatically |
 
 ---
 

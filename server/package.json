@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
-    "migrate": "node db/migrate.js"
+    "migrate": "node db/migrate.js",
+    "build:client": "cd ../client && npm install && VITE_API_URL=/api npm run build"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.4.5",

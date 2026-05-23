@@ -2,7 +2,10 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const fs = require('fs');
 const pool = require('./db/connection');
+
+const isRailway = !!(process.env.RAILWAY_ENVIRONMENT || process.env.RAILWAY_PROJECT_ID);
 
 const authRoutes = require('./routes/auth');
 const projectRoutes = require('./routes/projects');
@@ -12,11 +15,25 @@ const attendanceRoutes = require('./routes/attendance');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-const isProduction = process.env.NODE_ENV === 'production';
+const isProductionEnv = () =>
+  process.env.NODE_ENV === 'production' || isRailway;
 
-if (isProduction) {
+const clientDist = path.resolve(__dirname, '..', 'client', 'dist');
+const hasClientBuild = fs.existsSync(path.join(clientDist, 'index.html'));
+
+if (isProductionEnv()) {
   app.set('trust proxy', 1);
 }
+
+// Early health check (before DB) for Railway deploy probes
+app.get('/api/health', (req, res) => {
+  res.json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    database: process.env.DATABASE_URL || process.env.DATABASE_PRIVATE_URL ? 'configured' : 'missing',
+    clientBuild: hasClientBuild,
+  });
+});
 
 // Middleware
 const allowedOrigins = process.env.CLIENT_URL
@@ -133,18 +150,13 @@ const autoMigrate = async () => {
     console.log('✅ Database tables ready');
   } catch (err) {
     console.error('❌ Migration / Connection error:', err.message);
-    if (isProduction) {
-      process.exit(1);
+    if (isProductionEnv()) {
+      throw err;
     }
   } finally {
     if (client) client.release();
   }
 };
-
-// Health check
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
-});
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -153,9 +165,8 @@ app.use('/api', taskRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/attendance', attendanceRoutes);
 
-// Serve React build in production (single-service Railway deploy)
-if (isProduction && process.env.SERVE_CLIENT !== 'false') {
-  const clientDist = path.resolve(__dirname, '..', 'client', 'dist');
+// Serve React build when dist exists (Railway single-service deploy)
+if (hasClientBuild && process.env.SERVE_CLIENT !== 'false') {
   app.use(express.static(clientDist));
   app.get('*', (req, res, next) => {
     if (req.path.startsWith('/api')) return next();
@@ -163,6 +174,8 @@ if (isProduction && process.env.SERVE_CLIENT !== 'false') {
       if (err) next(err);
     });
   });
+} else if (isProductionEnv()) {
+  console.warn('⚠️ client/dist not found — API only. Run build step or set SERVE_CLIENT=false.');
 }
 
 // API 404 handler
@@ -179,14 +192,37 @@ app.use((err, req, res, next) => {
 // Start server
 const start = async () => {
   if (!process.env.JWT_SECRET) {
-    console.error('❌ JWT_SECRET is not set in .env — authentication will not work securely.');
+    console.error('❌ JWT_SECRET is not set. Add it in Railway → Variables.');
     process.exit(1);
   }
-  await autoMigrate();
-  app.listen(PORT, () => {
+
+  if (isRailway) {
+    process.env.NODE_ENV = process.env.NODE_ENV || 'production';
+    console.log('🚂 Railway environment detected');
+    console.log('   DATABASE_URL:', process.env.DATABASE_URL || process.env.DATABASE_PRIVATE_URL ? 'set' : 'MISSING');
+    console.log('   JWT_SECRET:', process.env.JWT_SECRET ? 'set' : 'MISSING');
+    console.log('   Client build:', hasClientBuild ? 'found' : 'MISSING');
+  }
+
+  const server = app.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Server running on port ${PORT}`);
-    console.log(`📡 Health check: http://localhost:${PORT}/api/health`);
+    console.log(`📡 Health: /api/health`);
   });
+
+  server.on('error', (err) => {
+    console.error('❌ Server error:', err.message);
+    process.exit(1);
+  });
+
+  try {
+    await autoMigrate();
+  } catch (err) {
+    console.error('❌ Migration failed:', err.message);
+    process.exit(1);
+  }
 };
 
-start();
+start().catch((err) => {
+  console.error('❌ Fatal startup error:', err);
+  process.exit(1);
+});

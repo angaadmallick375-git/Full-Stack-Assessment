@@ -1,0 +1,13 @@
+{
+  "name": "syncora-full-stack",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Syncora — Team Task Manager (monorepo root for Railway)",
+  "scripts": {
+    "build": "npm install --prefix server && npm install --prefix client && npm run build --prefix client",
+    "start": "npm start --prefix server"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

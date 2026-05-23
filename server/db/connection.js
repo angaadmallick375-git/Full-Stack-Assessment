@@ -1,7 +1,21 @@
 const { Pool } = require('pg');
-const { PGlite } = require('@electric-sql/pglite');
 const path = require('path');
 const fs = require('fs');
+
+function shouldUseSsl(connectionString) {
+  if (process.env.DATABASE_SSL === 'false') return false;
+  if (process.env.DATABASE_SSL === 'true') return { rejectUnauthorized: false };
+  if (process.env.PGSSLMODE === 'require') return { rejectUnauthorized: false };
+  if (connectionString.includes('sslmode=disable')) return false;
+  if (connectionString.includes('railway.internal')) return false;
+  if (connectionString.includes('localhost') || connectionString.includes('127.0.0.1')) {
+    return false;
+  }
+  if (process.env.NODE_ENV === 'production') {
+    return { rejectUnauthorized: false };
+  }
+  return false;
+}
 
 class PGlitePool {
   constructor() {
@@ -17,6 +31,7 @@ class PGlitePool {
       }
     }
 
+    const { PGlite } = require('@electric-sql/pglite');
     this.initPromise = PGlite.create(dataDir).then((db) => {
       this.db = db;
       console.log('✅ PGlite initialized');
@@ -66,15 +81,21 @@ async function verifyPostgres(pool) {
 }
 
 async function createPool() {
-  if (process.env.DATABASE_URL) {
-    const useSsl =
-      process.env.DATABASE_SSL === 'true' ||
-      process.env.PGSSLMODE === 'require' ||
-      process.env.NODE_ENV === 'production';
+  const isRailway = !!(process.env.RAILWAY_ENVIRONMENT || process.env.RAILWAY_PROJECT_ID);
+  const databaseUrl = process.env.DATABASE_URL || process.env.DATABASE_PRIVATE_URL;
+
+  if (isRailway && !databaseUrl) {
+    throw new Error(
+      'DATABASE_URL is required on Railway. Add a PostgreSQL database to your project and link it to this service.'
+    );
+  }
+
+  if (databaseUrl) {
+    const ssl = shouldUseSsl(databaseUrl);
 
     const pgPool = new Pool({
-      connectionString: process.env.DATABASE_URL,
-      ssl: useSsl ? { rejectUnauthorized: false } : false,
+      connectionString: databaseUrl,
+      ssl: ssl || false,
       max: 10,
       idleTimeoutMillis: 30000,
       connectionTimeoutMillis: 10000,
@@ -90,7 +111,11 @@ async function createPool() {
       return pgPool;
     } catch (err) {
       await pgPool.end().catch(() => {});
-      if (process.env.NODE_ENV === 'production') {
+      const isProd =
+        process.env.NODE_ENV === 'production' ||
+        process.env.RAILWAY_ENVIRONMENT ||
+        process.env.RAILWAY_PROJECT_ID;
+      if (isProd) {
         throw new Error(`PostgreSQL connection failed: ${err.message}`);
       }
       console.warn('⚠️ DATABASE_URL invalid — falling back to PGlite:', err.message);

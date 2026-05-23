@@ -1,9 +1,13 @@
+# Use repo-root railway.toml when possible.
+# If Railway root directory is set to "server", use these settings in the dashboard:
+#   Build:  npm install && npm run build:client
+#   Start:  npm start
+
 [build]
 builder = "nixpacks"
-buildCommand = "npm install && cd ../client && npm install && VITE_API_URL=/api npm run build"
+buildCommand = "npm install && npm run build:client"
 
 [deploy]
 startCommand = "npm start"
 healthcheckPath = "/api/health"
-healthcheckTimeout = 120
-restartPolicyType = "on_failure"
+healthcheckTimeout = 300
