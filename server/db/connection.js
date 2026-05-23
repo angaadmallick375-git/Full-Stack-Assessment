@@ -31,12 +31,23 @@ class PGlitePool {
       }
     }
 
-    const { PGlite } = require('@electric-sql/pglite');
-    this.initPromise = PGlite.create(dataDir).then((db) => {
-      this.db = db;
-      console.log('✅ PGlite initialized');
-      return db;
-    });
+    try {
+      const { PGlite } = require('@electric-sql/pglite');
+      this.initPromise = (async () => {
+        try {
+          const db = await PGlite.create(dataDir);
+          this.db = db;
+          console.log('✅ PGlite initialized');
+          return db;
+        } catch (error) {
+          console.warn('⚠️ PGlite initialization failed:', error.message);
+          throw error;
+        }
+      })();
+    } catch (error) {
+      console.warn('⚠️ PGlite not available:', error.message);
+      this.initPromise = Promise.reject(new Error('PGlite unavailable'));
+    }
 
     this.eventListeners = {};
   }
@@ -122,8 +133,31 @@ async function createPool() {
     }
   }
 
-  console.log('💡 Using embedded PGlite (local dev)');
-  return new PGlitePool();
+  // Try PGlite
+  try {
+    console.log('💡 Attempting PGlite initialization...');
+    const pool = new PGlitePool();
+    // Test if PGlite actually initializes
+    await new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        reject(new Error('PGlite initialization timeout'));
+      }, 5000);
+      
+      pool.query('SELECT 1').then(() => {
+        clearTimeout(timeout);
+        resolve();
+      }).catch((err) => {
+        clearTimeout(timeout);
+        reject(err);
+      });
+    });
+    return pool;
+  } catch (err) {
+    console.warn('⚠️ PGlite initialization failed:', err.message);
+    console.log('📝 Using Mock Database (in-memory, development only)');
+    const MockDB = require('./mock-db');
+    return new MockDB();
+  }
 }
 
 let pool;

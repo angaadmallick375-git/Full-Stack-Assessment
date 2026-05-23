@@ -217,8 +217,12 @@ const start = async () => {
   try {
     await autoMigrate();
   } catch (err) {
-    console.error('❌ Migration failed:', err.message);
-    process.exit(1);
+    console.error('❌ Migration error:', err.message);
+    if (isProductionEnv()) {
+      process.exit(1);
+    } else {
+      console.log('⚠️ Running in mock mode - some features may be limited');
+    }
   }
 };
 

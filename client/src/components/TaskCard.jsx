@@ -10,26 +10,38 @@ const TaskCard = ({ task, onClick, draggable }) => {
 
   return (
     <div
-      className={`task-card ${draggable ? 'task-card-draggable' : ''}`}
+      className={`task-card ${draggable ? 'task-card-draggable' : ''} animate-fadeIn`}
       onClick={() => onClick(task)}
       id={`task-card-${task.id}`}
+      style={{
+        animationDelay: `${Math.random() * 0.3}s`
+      }}
     >
       <div className={`task-priority-bar ${task.priority}`} />
-      <div style={{ paddingLeft: '8px' }}>
+      <div style={{ paddingLeft: '12px', flex: 1 }}>
         <div className="task-card-title">{task.title}</div>
         
         {task.tags && task.tags.length > 0 && (
-          <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginBottom: '8px' }}>
+          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '10px', marginTop: '4px' }}>
             {task.tags.map(tag => {
               const getTagColor = (t) => {
-                const colors = ['#6366f1', '#818cf8', '#38bdf8', '#4f46e5', '#a5b4fc', '#ef4444', '#4ade80'];
+                const colors = ['#6366f1', '#818cf8', '#38bdf8', '#4f46e5', '#a5b4fc', '#ef4444', '#4ade80', '#fbbf24'];
                 let hash = 0;
                 for (let i = 0; i < t.length; i++) hash = t.charCodeAt(i) + ((hash << 5) - hash);
                 return colors[Math.abs(hash) % colors.length];
               };
               const color = getTagColor(tag);
               return (
-                <span key={tag} style={{ fontSize: '0.65rem', padding: '2px 6px', borderRadius: '4px', background: color + '20', color: color, border: `1px solid ${color}50` }}>
+                <span key={tag} style={{ 
+                  fontSize: '0.65rem', 
+                  padding: '3px 8px', 
+                  borderRadius: '6px', 
+                  background: color + '18', 
+                  color: color, 
+                  border: `1.5px solid ${color}40`,
+                  fontWeight: 500,
+                  letterSpacing: '0.02em'
+                }}>
                   #{tag}
                 </span>
               );
@@ -42,11 +54,12 @@ const TaskCard = ({ task, onClick, draggable }) => {
             fontSize: '0.78rem',
             color: 'var(--text-muted)',
             lineHeight: 1.5,
-            marginBottom: '6px',
+            marginBottom: '10px',
             display: '-webkit-box',
             WebkitLineClamp: 2,
             WebkitBoxOrient: 'vertical',
-            overflow: 'hidden'
+            overflow: 'hidden',
+            wordBreak: 'break-word'
           }}>
             {task.description}
           </div>
@@ -69,10 +82,11 @@ const TaskCard = ({ task, onClick, draggable }) => {
           )}
 
           {task.assignee_name && (
-            <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '6px' }}>
               <div className="avatar avatar-sm" title={task.assignee_name}>
                 {initials}
               </div>
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{task.assignee_name}</span>
             </div>
           )}
         </div>
