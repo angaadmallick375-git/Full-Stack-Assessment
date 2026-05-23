@@ -1,6 +1,6 @@
 [build]
 builder = "nixpacks"
-buildCommand = "npm install --prefix server && npm install --prefix client && VITE_API_URL=/api npm run build --prefix client"
+buildCommand = "bash build.sh"
 
 [deploy]
 startCommand = "npm start"

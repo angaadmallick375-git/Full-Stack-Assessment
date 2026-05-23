@@ -3,10 +3,10 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
 const INITIAL_SANDBOX_TASKS = [
-  { id: 1, title: '🚀 Explore Syncora Kanban Board', priority: 'medium', status: 'in_progress' },
-  { id: 2, title: '🔒 Set up project security rules', priority: 'high', status: 'todo' },
-  { id: 3, title: '🎉 Try moving this task to In Progress!', priority: 'low', status: 'todo' },
-  { id: 4, title: '✨ Sign up to unlock full team collaboration', priority: 'medium', status: 'done' },
+  { id: 1, title: 'Review the project plan', priority: 'medium', status: 'in_progress' },
+  { id: 2, title: 'Confirm next steps with the team', priority: 'high', status: 'todo' },
+  { id: 3, title: 'Move this task to In Progress', priority: 'low', status: 'todo' },
+  { id: 4, title: 'Finalize the weekly update', priority: 'medium', status: 'done' },
 ];
 
 const Landing = () => {
@@ -104,15 +104,15 @@ const Landing = () => {
       {/* Hero Section */}
       <section className="landing-hero animate-fadeIn">
         <div className="hero-badge">
-          <span>🚀</span> Introducing Syncora 2.0
+          <span>📌</span> Team collaboration made simple
         </div>
         <h1 className="hero-title">
-          Work in <span>Sync</span>,<br />
-          Build with Speed
+          Bring your team together.<br />
+          Get more done.
         </h1>
         <p className="hero-subtitle">
-          Syncora integrates your tasks, projects, and teams into one gorgeous, glassmorphic workspace.
-          Collaborate instantly with role-based access, automated workflows, and drag-and-drop boards.
+          A straightforward workspace for tasks, projects, and team coordination.
+          Clear, intuitive, and built to keep work moving.
         </p>
         <div className="hero-ctas">
           {user ? (
@@ -122,10 +122,10 @@ const Landing = () => {
           ) : (
             <>
               <Link to="/signup" className="btn btn-primary btn-lg">
-                Start Free Workspace →
+                Start a free workspace →
               </Link>
               <button onClick={handleScrollToSandbox} className="btn btn-secondary btn-lg">
-                Try Live Sandbox
+                Explore the demo board
               </button>
             </>
           )}
@@ -136,7 +136,7 @@ const Landing = () => {
       <section id="demo-sandbox" className="landing-sandbox">
         <div className="sandbox-header">
           <h2>Interactive Sandbox</h2>
-          <p>Try managing tasks in real time right now. Zero setup required.</p>
+          <p>Explore task flow in a lightweight demo board. No setup needed.</p>
         </div>
 
         <div className="sandbox-container">
@@ -168,7 +168,7 @@ const Landing = () => {
             {/* TO DO COLUMN */}
             <div className="sandbox-column">
               <div className="sandbox-column-title">
-                <span>📋 To Do</span>
+                    <span>To Do</span>
                 <span className="sandbox-column-count">
                   {tasks.filter(t => t.status === 'todo').length}
                 </span>
@@ -204,7 +204,7 @@ const Landing = () => {
             {/* IN PROGRESS COLUMN */}
             <div className="sandbox-column">
               <div className="sandbox-column-title">
-                <span>⚡ In Progress</span>
+                    <span>In Progress</span>
                 <span className="sandbox-column-count">
                   {tasks.filter(t => t.status === 'in_progress').length}
                 </span>
@@ -247,7 +247,7 @@ const Landing = () => {
             {/* DONE COLUMN */}
             <div className="sandbox-column">
               <div className="sandbox-column-title">
-                <span>✅ Done</span>
+                    <span>Done</span>
                 <span className="sandbox-column-count">
                   {tasks.filter(t => t.status === 'done').length}
                 </span>
@@ -285,7 +285,7 @@ const Landing = () => {
 
           <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span className="text-xs text-muted">
-              💡 Task cards inside this sandbox update instantly in local component state!
+              Task cards in this demo update immediately in local state.
             </span>
             <button
               onClick={handleResetSandbox}
@@ -300,22 +300,22 @@ const Landing = () => {
 
       {/* Features Grid Section */}
       <section className="landing-features">
-        <h2 className="features-title">Why Teams Choose Syncora</h2>
+        <h2 className="features-title">Why teams choose this workspace</h2>
         <div className="features-grid">
           <div className="feature-card">
             <div className="feature-icon">✨</div>
-            <h3>Glassmorphic Beauty</h3>
-            <p>A premium design with rich dark aesthetics, floating glow spheres, and highly interactive cards.</p>
+            <h3>Modern interface</h3>
+            <p>A clean, refined layout with soft contrast, clear sections, and minimal visual clutter.</p>
           </div>
           <div className="feature-card">
             <div className="feature-icon">👑</div>
             <h3>Role-Based Control</h3>
-            <p>Admin roles manage projects and users, while member roles update work. Everyone works in full sync.</p>
+            <p>Admin roles manage projects and users while members keep tasks moving. Roles are easy to understand.</p>
           </div>
           <div className="feature-card">
             <div className="feature-icon">⚡</div>
             <h3>Instant Kanban Boards</h3>
-            <p>Manage task queues easily with responsive card-decks, priority tags, and clean overlays.</p>
+            <p>Track work with a simple board, priority labels, and smooth task updates.</p>
           </div>
         </div>
       </section>
