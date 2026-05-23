@@ -174,8 +174,8 @@ if (hasClientBuild && process.env.SERVE_CLIENT !== 'false') {
       if (err) next(err);
     });
   });
-} else if (isProductionEnv()) {
-  console.warn('⚠️ client/dist not found — API only. Run build step or set SERVE_CLIENT=false.');
+} else {
+  console.warn('⚠️ client/dist not found — API only mode');
 }
 
 // API 404 handler
@@ -218,10 +218,10 @@ const start = async () => {
     await autoMigrate();
   } catch (err) {
     console.error('❌ Migration error:', err.message);
+    console.log('⚠️ Server running but database initialization failed');
     if (isProductionEnv()) {
-      process.exit(1);
-    } else {
-      console.log('⚠️ Running in mock mode - some features may be limited');
+      console.log('💡 Tip: Link a PostgreSQL database in Railway to enable full functionality');
+      // Don't exit - allow server to run with mock/fallback database
     }
   }
 };
