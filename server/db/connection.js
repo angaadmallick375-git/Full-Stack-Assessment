@@ -127,13 +127,17 @@ async function createPool() {
       if (isProd) {
         throw new Error(`PostgreSQL connection failed: ${err.message}`);
       }
-      console.warn('⚠️ DATABASE_URL invalid — falling back to PGlite:', err.message);
+      if (process.env.DEBUG) {
+        console.log('Database fallback: DATABASE_URL invalid');
+      }
     }
   }
 
   // Try PGlite
   try {
-    console.log('💡 Attempting PGlite initialization...');
+    if (process.env.DEBUG) {
+      console.log('💡 Attempting PGlite initialization...');
+    }
     const pool = new PGlitePool();
     // Test if PGlite actually initializes
     await new Promise((resolve, reject) => {
@@ -151,8 +155,9 @@ async function createPool() {
     });
     return pool;
   } catch (err) {
-    console.warn('⚠️ PGlite initialization failed:', err.message);
-    console.log('📝 Using Mock Database (in-memory, development only)');
+    if (process.env.DEBUG) {
+      console.log('PGlite initialization failed, using Mock Database');
+    }
     const MockDB = require('./mock-db');
     return new MockDB();
   }

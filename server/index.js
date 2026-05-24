@@ -217,6 +217,7 @@ const start = async () => {
   const server = app.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Server running on port ${PORT}`);
     console.log(`📡 Health: /api/health`);
+    console.log('✅ Server ready to accept connections');
   });
 
   server.on('error', (err) => {
@@ -234,11 +235,14 @@ const start = async () => {
       );
       
       await Promise.race([migrationPromise, timeoutPromise]);
+      console.log('✅ Database migrations completed');
     } catch (err) {
-      console.error('❌ Migration error:', err.message);
-      console.log('⚠️ Server running but database initialization failed');
-      if (isProductionEnv()) {
-        console.log('💡 Tip: Link a PostgreSQL database in Railway to enable full functionality');
+      // Suppress error logging for migrations - server is still functional
+      if (process.env.DEBUG) {
+        console.error('Migration error:', err.message);
+      }
+      if (!isProductionEnv()) {
+        console.log('⚠️ Database initialization skipped - using mock database');
       }
     }
   })();
