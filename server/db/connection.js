@@ -96,8 +96,11 @@ async function createPool() {
   const databaseUrl = process.env.DATABASE_URL || process.env.DATABASE_PRIVATE_URL;
 
   if (isRailway && !databaseUrl) {
-    console.warn('⚠️ DATABASE_URL not set on Railway - will use mock database');
+    console.warn('⚠️ DATABASE_URL not set on Railway - will use mock database directly (skipping PGlite to prevent memory limits/crash)');
+    const MockDB = require('./mock-db');
+    return new MockDB();
   }
+
 
   if (databaseUrl) {
     const ssl = shouldUseSsl(databaseUrl);
